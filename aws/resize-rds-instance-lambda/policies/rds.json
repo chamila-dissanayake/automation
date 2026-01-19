@@ -1,0 +1,31 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:${region}:${account_id}:*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "rds:ModifyDBInstance",
+                "rds:ModifyDBCluster",
+                "rds:DescribeDBClusters",
+                "rds:DescribeDBInstance",
+                "rds:DescribeDBInstances",
+                "rds:RebootDBInstance",
+                "kms:Decrypt",
+                "kms:List*",
+                "kms:DescribeKey",
+                "kms:CreateGrant"
+            ],
+            "Resource": [
+                "arn:aws:rds:${region}:${account_id}:cluster:*",
+                "arn:aws:rds:${region}:${account_id}:db:*",
+                "arn:aws:rds:${region}:${account_id}:pg:fieldresearch*",
+                "arn:aws:kms:${region}:${account_id}:key/*"
+            ]
+        }
+    ]
+}
