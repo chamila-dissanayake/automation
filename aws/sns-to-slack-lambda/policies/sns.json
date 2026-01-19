@@ -1,0 +1,25 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:${region}:${account_id}:*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sns:GetTopicAttributes",
+                "sns:List*",
+                "sns:CheckIfPhoneNumberIsOptedOut",
+                "sns:GetEndpointAttributes",
+                "sns:GetDataProtectionPolicy",
+                "sns:GetPlatformApplicationAttributes",
+                "sns:GetSMSAttributes",
+                "sns:GetSMSSandboxAccountStatus",
+                "sns:GetSubscriptionAttributes"
+            ],
+            "Resource": "arn:aws:sns:${region}:${account_id}:cluster:fieldresearch-*"
+        }
+    ]
+}
