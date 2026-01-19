@@ -1,0 +1,34 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Sid": "1",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:${region}:${account_id}:*"
+        },
+        {
+            "Effect": "Allow",
+            "Sid": "2",
+            "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:logs:${region}:${account_id}:log-group:/aws/lambda/${function_name}",
+                "arn:aws:logs:${region}:${account_id}:log-group:*:log-stream:*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Sid": "5",
+            "Action": "logs:FilterLogEvents",
+            "Condition": {
+                "StringLike": { "aws:SourceArn": "arn:aws:logs:${region}:${account_id}:*" }
+            },
+            "Resource": [
+                "arn:aws:logs:${region}:${account_id}:log-group:/${env_name}/fe-portal-service:*"
+            ]
+        }
+    ]
+}

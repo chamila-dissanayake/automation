@@ -1,0 +1,19 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Sid": "1",
+            "Action": ["lambda:InvokeFunction"],
+            "Resource": "arn:aws:lambda:${region}:${account_id}:function:${function_name}"
+        },
+        {
+            "Effect": "Allow",
+            "Sid": "2",
+            "Action": ["ec2:Start*", "ec2:Stop*"],
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}

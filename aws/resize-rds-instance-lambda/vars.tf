@@ -1,12 +1,8 @@
 variable "env" {type = map(string)}
+
 variable "tags" { type = map(string)}
 
 variable "lambda" {
-    type = map(string)
-    default = {}
-}
-
-variable "cloudfront" {
     type = map(string)
     default = {}
 }
