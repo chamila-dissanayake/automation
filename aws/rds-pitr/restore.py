@@ -18,12 +18,12 @@ logging.basicConfig(
 )
 
 # Slack webhook URL
-SLACK_WEBHOOK_URL = 'https://'
+SLACK_WEBHOOK_URL = ''
 
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description='Restore AWS RDS DB cluster using point-in-time recovery'
+        description='Restore Aurora MySQL DB cluster using point-in-time recovery'
     )
     parser.add_argument(
         '--restore-time',
@@ -32,17 +32,19 @@ def parse_arguments():
     )
     parser.add_argument(
         '--env-name',
-        default='myapp-dev',
+        default='',
         help='Environment name (e.g., dev, qa, prod)'
     )
+    """
     parser.add_argument(
         '--triggered-by',
-        default='mannual',
+        default='manual',
         help='Who triggered the restore (default: automation)'
     )
+    """
     parser.add_argument(
         '--route53-zone-name',
-        default='example.com',
+        default='',
         help='Route53 hosted zone name (e.g., example.com)'
     )
     parser.add_argument(
@@ -57,13 +59,22 @@ def parse_arguments():
     )
     parser.add_argument(
         '--region',
-        default='ca-central-1',
-        help='AWS region (default: ca-central-1)'
+        default='us-east-1',
+        help='AWS region (default: us-east-1)'
     )
     parser.add_argument(
         '--ssm-parameter-name',
-        default='/myapp/dev/rds/db-cluster-identifier',
+        default='',
         help='SSM parameter name to store new cluster ID'
+    )
+    parser.add_argument(
+        '--subnet-group',
+        help='DB subnet group name (optional, inherits from source if not specified)'
+    )
+    parser.add_argument(
+        '--security-groups',
+        nargs='+',
+        help='Security group IDs (optional, inherits from source if not specified)'
     )
 
     return parser.parse_args()
@@ -592,15 +603,15 @@ def send_slack_message(message, level='info'):
         http = urllib3.PoolManager()
         encoded_message = json.dumps(slack_message).encode('utf-8')
 
-        #response = http.request(
-        #    'POST',
-        #    SLACK_WEBHOOK_URL,
-        #    body=encoded_message,
-        #    headers={'Content-Type': 'application/json'}
-        #)
+        response = http.request(
+            'POST',
+            SLACK_WEBHOOK_URL,
+            body=encoded_message,
+            headers={'Content-Type': 'application/json'}
+        )
 
-        #if response.status != 200:
-        #    logger.warning(f"Slack notification failed with status {response.status}")
+        if response.status != 200:
+            logger.warning(f"Slack notification failed with status {response.status}")
     except Exception as e:
         logger.warning(f"Failed to send Slack notification: {str(e)}")
 
@@ -628,6 +639,24 @@ def main():
         # Construct/get restore time
         restore_time = ""
 
+        if args.restore_time:
+            try:
+                # If restore time provided, parse it
+                restore_time = datetime.fromisoformat(args.restore_time.replace('Z', '+00:00'))
+                logger.info(f"Using provided restore time: {restore_time}")
+            except ValueError as e:
+                logger.error(f"Invalid restore time format: {args.restore_time}")
+                logger.error("Expected format: YYYY-MM-DDTHH:MM:SS")
+                sys.exit(1)
+        else:
+             # Default to last restorable time of the DB cluster
+            restore_time = db_cluster_last_restorable_time(
+                    rds_client=rds_client,
+                    cluster_id=get_current_db_cluster_id(ssm_client, args.ssm_parameter_name)
+                )
+            logger.info(f"Using last restorable time: {restore_time}")
+
+        """
         if args.triggered_by == 'schedule':
             # If triggered by schedule, set restore time to yesterday 9:00 AM UTC
             restore_time = get_restore_time(hour=9, minute=0, second=0)
@@ -649,6 +678,7 @@ def main():
                         cluster_id=get_current_db_cluster_id(ssm_client, args.ssm_parameter_name)
                     )
                 logger.info(f"Using last restorable time: {restore_time}")
+        """
 
         # Step 1: Get Source cluster configs
         # Generate new cluster ID
@@ -656,7 +686,7 @@ def main():
         new_cluster_id = generate_new_cluster_id(args.env_name)
 
         # Get source cluster configuration
-        logger.info("=" * 80)
+        logger.info("\n" + "=" * 80)
         logger.info("Step 1/6: Retrieving source cluster configuration")
         logger.info("=" * 80)
 
@@ -695,7 +725,7 @@ def main():
         )
 
         # Step 2: Restore DB cluster
-        logger.info("=" * 80)
+        logger.info("\n" + "=" * 80)
         logger.info("Step 2/6: Initiating point-in-time restore")
         logger.info("Source Cluster ID: %s", source_cluster_id)
         logger.info("New Cluster ID: %s", new_cluster_id)
