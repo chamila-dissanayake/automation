@@ -32,7 +32,7 @@ def parse_arguments():
     )
     parser.add_argument(
         '--env-name',
-        default='fieldresearch-dev',
+        default='',
         help='Environment name (e.g., dev, qa, prod)'
     )
     """
@@ -44,7 +44,7 @@ def parse_arguments():
     """
     parser.add_argument(
         '--route53-zone-name',
-        default='pearsonaurora.com',
+        default='',
         help='Route53 hosted zone name (e.g., example.com)'
     )
     parser.add_argument(
@@ -59,12 +59,12 @@ def parse_arguments():
     )
     parser.add_argument(
         '--region',
-        default='ca-central-1',
-        help='AWS region (default: ca-central-1)'
+        default='us-east-1',
+        help='AWS region (default: us-east-1)'
     )
     parser.add_argument(
         '--ssm-parameter-name',
-        default='/fieldresearch/dev/rds/db-cluster-identifier',
+        default='',
         help='SSM parameter name to store new cluster ID'
     )
     parser.add_argument(
